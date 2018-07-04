@@ -6,21 +6,51 @@ define([
 ], function (
     requirejs,
     $,
-    Jupiter,
-    events
+    Jupiter
 ) {
     "use strict";
 
-    function setup_gradelabel() {
-        console.log('setup gradelabel');
+    var is_solution = function(cell) {
+        if (cell.metadata.nbgrader === undefined) {
+            return false;
+        } else if (cell.metadata.nbgrader.solution === undefined) {
+            return false;
+        } else {
+            return cell.metadata.nbgrader.solution;
+        }
+    };
+
+    var is_grade = function(cell) {
+        if (cell.metadata.nbgrader === undefined) {
+            return false;
+        } else if (cell.metadata.nbgrader.grade === undefined) {
+            return false;
+        } else {
+            return cell.metadata.nbgrader.grade;
+        }
+    };
+
+    var gradeLabel = '<div class="grade-label" style="padding: 8px 0;">' +
+                     '<span class="label label-warning">С оценкой</span>' +
+                     '</div>';
+
+    function add_labels() {
+        var cells = Jupyter.notebook.get_cells();
+
+        cells.forEach(function(cell) {
+            if (!is_grade(cell) && !is_solution(cell)) {
+                return;
+            }
+
+            var inner_cell = cell.element.find('.inner_cell');
+            $(inner_cell).prepend(gradeLabel);
+        });
     }
 
+
     function load_extension() {
-        if (Jupiter.notebook.kernel) {
-            setup_gradelabel();
-        } else {
-            events.on('kernel_ready.Kernel', setup_gradelabel);
-        }
+        add_labels();
+        console.log('nbgrader extension for display grade label loaded')
     }
 
     return {
